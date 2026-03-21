@@ -14,6 +14,7 @@ work had already appeared in the literature. As a result, I did not publish this
 
 ## Repository Structure
 
+```
 neural-sindy/
 ├── model/
 │   ├── layers.py          # masked linear, Hadamard layer, etc.
@@ -27,6 +28,7 @@ neural-sindy/
 ├── neural_sindy.ipynb   # Experiments on dynamical systems
 │
 ├── README.md
+```
 
 ---
 
