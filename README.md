@@ -12,6 +12,24 @@ work had already appeared in the literature. As a result, I did not publish this
 
 ---
 
+## Repository Structure
+
+neural-sindy/
+├── model/
+│   ├── layers.py          # masked linear, Hadamard layer, etc.
+│   ├── models.py          # SINDy models
+│   ├── pruning.py         # pruning logic
+│   ├── train.py           # training loop
+│   ├── dynamics_sim.py    # system simulation (Lorenz, etc.)
+│   ├── utils.py
+│   └── plot.py
+│
+├── neural_sindy.ipynb   # Experiments on dynamical systems
+│
+├── README.md
+
+---
+
 The algorithm work as follows:
   - We have several neural network layers, implementing different function primitives, including a masked linear layer, with the mask allowing us to implement a form of pruning, and a multiplicative (Hadamard) layer that allows us to combine linear layers into higher-order polynomials.
   - We train the network until convergence, and then prune the least important weight, i.e the weight that, when removed, has the least impact on worsening the performance of the trained model.
