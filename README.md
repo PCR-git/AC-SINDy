@@ -25,7 +25,9 @@ neural-sindy/
 │   ├── utils.py
 │   └── plot.py
 │
-├── neural_sindy.ipynb   # Experiments on dynamical systems
+├── neural_sindy.ipynb     # Experiments on dynamical systems
+│
+├── neural_sindy.pdf       # Technical report (method + results)
 │
 ├── README.md
 ```
