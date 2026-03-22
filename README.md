@@ -1,4 +1,4 @@
-## Neural SINDy: Scalable Sparse Identification of Nonlinear Dynamics
+## Compositional Neural SINDy: Scalable Sparse Identification of Nonlinear Dynamics
 
 A compositional neural extension of the Sparse Identification of Nonlinear Dynamics (SINDy) framework for learning sparse, interpretable dynamical systems.
 
