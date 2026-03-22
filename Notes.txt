@@ -1,0 +1,109 @@
+## TO DO:
+
+* Implement batch-norm at every layer. Also need to divide by batchnorms to recover the correct weights. Build a new model that does not have batchnorm. Only has learned weights, to use at test time. \\
+* Experiments:
+  * Double pendulum and cart-pole. Coupled van der Pol oscillators, coupled Duffing oscillators, Hopfield net / Wilson-Cowan system \\
+\\
+* Use attention to learn couplings? The attention network has no other purpose other than to figure out what connects to what. Once we have the connectivity pattern, we run SINDy on this graph.
+* Learn a sparse controller using a SINDy-NN. Force a polynomial system into another polynomial system. Stabilize an inverted pendulum? Policy RL? \\
+* By constraining architecture to sum a fixed function over timesteps, we can learn integral control terms.
+* Robotics applications: combine with rotation matrices, local coordinate frames defined with respect to other coordinate frames, to learn dynamical models of serial-linkages.
+* Generalize: add term to loss to force neurons (sub-networks) to learn different outputs, so that pruning will work. For instance, could add loss term to force terms to be nearly othogonal: https://en.wikipedia.org/wiki/Orthogonal_polynomials
+* Use to approximate Koopman operators; combine with physics-based deep learning: http://physicsbaseddeeplearning.org/others-timeseries.html
+* Fully-connected networks as building blocks, conneted by learned sparse connections
+* Combine with GNNs: \\
+Interaction Networks for Learning about Objects, Relations and Physics: https://proceedings.neurips.cc/paper/2016/file/3147da8ab4a0437c15ef51a5cc7f2dc4-Paper.pdf
+Graph Networks as Learnable Physics Engines for Inference and Control: http://proceedings.mlr.press/v80/sanchez-gonzalez18a/sanchez-gonzalez18a.pdf
+Learning to Simulate Complex Physics with Graph Networks: http://proceedings.mlr.press/v119/sanchez-gonzalez20a/sanchez-gonzalez20a.pdf
+
+* More ways to apply the same principle: constrained architectures that represent rotations/sheers, affine transformations; logical operations, kernels, etc.
+
+-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+
+## More Ideas:
+
+* Chaos control: https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.64.1196 \\
+https://arxiv.org/abs/1906.07672 \\
+https://arxiv.org/abs/2203.16201
+
+* Use Shapley value to prune? https://christophm.github.io/interpretable-ml-book/shapley.html \\
+* Simultaneously learn coordinates using auto-encoder or by learning rotation matrices / a library of common transformations (if you add $arcsin$ and $arccos$, you could potentially learn the transformations from rectilinear to polar coordinates and back). The former has already been done, but might be combined with this architecture to better effect: https://arxiv.org/abs/1904.02107 \\
+* Add explicit time input to networks \\
+* Generalize to PDEs \\
+* Beam search and backtracking: branch on the $n$ nodes with the worst performance, using the pruning criterion as an estimate of how bad they are. The idea of stopping the training periodically and pruning edges leads to a natural way to combine search with smooth (gradient-based) methods. We can trade off how far we look ahead and how much compute we use. \\
+* Half-inverse gradients for improved optimization: https://arxiv.org/abs/2203.10131 \\
+* NEAT-like expansion. Every time we add a variable, we get every other term involving this variable for free. Leverage this to reduce number of parameters needed. \\
+* Control applications: Learn a sparse controller using a SINDy-NN. Try to extract LQR and PID controllers. Interleave learning the model and using it for control. Linearize the model, then use it to do LQR.
+* More pruning improvements:
+  * Prune inside-out, i.e. don't kill the outer functions before their arguments (e.g. given $a*f(b*g(x)+c*h(x))$, prune $b,c$ before $a$). If the pruner chooses to prune the last nonzero edge leaving a neuron, and there are multiple nonzero weights entering this neuron (or vice-versa), we should not have pruned this edge (guarantee that this doesn't happen). \\
+  * Learn simple residual connections first, then higher order terms layer by layer. Try to learn simple explanation first, and only introduce more complex terms when this fails. One could try stepwise selection: start by adding $N$ terms, starting with simpler terms. Then, alternate between pruning and adding connections. This is known to be an effective approach in variable selection in linear regression. (From Wu and Hamada textbook; for details, see Draper and Smith, 1998) \\
+* An intermediate approach between one-step lookahead and Neural ODE is to run the Neural ODE on a single ODE at a time, clamping all but one of the state variables to their actual values.
+* Method to extract and print ODE symbolically from weights. \\
+* Learn $x^{1.5}$.
+  * $ x^w = sign^w(x) \exp(w \log(|x|)) $ \\
+$ = \exp(w \log(|x|)) \approx \exp(2 w \log(|x|+\epsilon)) $ if $2w$ even, \\
+$ = sign(x) \exp(w \log(|x|)) \approx \tanh(\alpha x) \exp(w \log(|x|+\epsilon))$ if $w$ odd \\
+
+-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+
+## More Ideas 2:
+
+* Use an "inverse simulator" (http://physicsbaseddeeplearning.org/physgrad.html) to improve the gradient descent optimization. "Auto-encoder": SINDY, combined with network that learns inverse (since time reversible, just make $t$ --> $-t$?). \\
+* Train until convergence using an L2 loss, and then set $q_i = a_i$ and $a_i=1$ for all $i$ and $f(x,y) = a_1 (q_1 x) + a_2 (q_2 y) $. Now, change the loss function to include an $L1$ term. No, better than this, include L1 from the beginning, together with an auxiliary variable on which L1 applies. Every parameter is multiplied by a constant on which L1 applies. \\
+* Should we use different losses when training different parts of the network? When different state variables scale much differently, some will have much more influence in training than others. \\
+* Can we enforce conservation laws, other constraints? Can we compute the Hamiltonian and use it for learning and control (i.e. two-boundary value control)? \\
+* Compute Jacobian symbolically. Now, we can use Jacobian to compute derivatives. \\
+* Custom layers($x^b$, exp_sum_NLReLU).
+* Look into other control applications: Adaptive control; model-predictive control; reinforcement learning; backstepping?. \\
+* Can we do something similar to SINDy for other kinds of simple rules? For instance learn rules for generating fractals, or Boids, or cellular automata, or continuous cellular automata. This would require logical operations, kernels, CNNs, etc. \\
+* Try L1 regularization on each whole term (on every layer?) \\
+* Perhaps once we get to a small enough network we should try every possible combination of the remaining edges, since the exponential number of combinations is no longer a problem. \\
+* Class for simulating PDEs; test on closed-form solutions of e.g. heat equation; see: http://physicsbaseddeeplearning.org/intro.html; Lattice Boltzmann Simulation of Fluid Flow Past a Cylinder? \\
+* Consider using information criteria for model selection (e.g. AIC/BIC) - No, this is equivalent to seeing which model minimizes sum of squared errors. \\
+* Other form of basis functions: Legendre polynomials, RBFs \\
+* Weighted LASSO, revisit layer norm; L1 loss on whole term \\
+* Pairwise AC-Net architecture implementation is slow \\
+* Stochastic dynamics; Experiment with losses: L1, L2, Huber. \\
+* Some activation functions (i.e. $1/x, log$) diverge for some values or produce large values and aren't typically seen in differential equations ($exp$). However, $exp$ and $log$ allow us to learn any power. We also don't need division (or even multipication). Can/should we implement these? We would need to prevent compositions of functions from diverging. We could implement clipping, or zero out connections for $exp(exp)$ or only include exp and log together. \\
+* Add traditional network as auxiliary and bound its output; then bring in stability guarantees.
+* Parameter sharing in the residual connections? \\
+* Could one potentially use attention to figure out which pairs of components are relevant to each other?
+* Layer normalization? (doesn't work) \\
+* Arithmetic Circuits may be relevant: https://en.wikipedia.org/wiki/Arithmetic_circuit_complexity \\
+* Experiment with different pruning methods? (pruning neurons; structured pruning) \\
+* Modify the loss so that more complicated terms are more heavily penalized (modify L1 loss)? \\
+* Compute derivative from data; total variation regularized derivative? \\
+* So far, we have had a Markov assumption (the current derivative depends only on the current state vector). But we could remove this assumption and let the current derivative depend on any past states and derivatives. In order to represent a time integral, we would need to compute the sum of each term at each time step and then backpropagate through the dynamics. It might be possible to use the adjoint method again to compute this more cheaply. We could then extend SINDy to include not only functions but their time integrals. This would also be a good place to bring in attention (either across space or time). \\
+* Try gradually increasing number of time steps in Neural ODE.
+
+-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+
+## Notes:
+
+What are the major improvements?
+  * Neural-network architecture (can automatically find constants and learn more complicated dynamics); parameter sharing allows us to represent an exponential number of candidate functions with a polynomial number of parameters; makes the optimization easier by giving more paths down to equilibrium. Makes high-dimensional systems and systems with highly-compositional dynamics tractable. Makes use of NN libraries and GPU computation. SINDy-PI requires guessing and checking LHS terms, which hugely increases run-time, whereas we can represent fractional dynamics directly. Adam appears to work well in practice, which is faster than second-order optimization. \\
+  * Seq-to-seq model (Neural ODE). Takes advantage of higher-order information by backpropagating through time; does so in a scalable manner by making use of the adjoint sensitivity method; and allows us to make use of powerful ODE solvers. \\
+  * Improved optimization: L1 is not a good criterion. Instead, remove the worst performer. Dummy variables allow us to apply L1 regularization. Using batch-norm improves optimization by alleviating scaling/dimensionality issues, while still allowing us to recover weights. Removing one variable at a time removes an unnecessary hyperparameter and provides natural way of combining search with gradient-based optimization. Using validation data to prune improves robustness. \\
+
+L1 Loss appears to be biased against low-order terms. This must be because the higher-order terms can achieve higher outputs with lower inputs, since they multiply.
+
+L1 regularization and L1 pruning criterion do opposite things. The first punishes weights for being large, the second for being too small. Instead of L1 pruning, try zeroing every weight and prune the one which has the least impact on the output when zeroed.
+
+We might try learning the simplest residual connections first, from the lowest layer to the highest layer, so that we try to learn simple explanations first, and only introduce more complex terms when this fails.
+
+If we have many terms or terms that need to be very close to zero, the network needs to be deeper, so that small weights are multiplied. In a one-layer network, the weights can only get as small as the learning rate, which may not be small enough.
+
+We may need duplicates of each possibility and a large enough standard deviation in weight initializations, so that different initializations can explore different parts of the state space.
+
+Huber loss is preferred to the L1 in certain cases for which there are both large outliers as well as small (ideally Gaussian) perturbations. MSE Loss may be better than L1 Loss, because we WANT to be sensitive to outliers (or maybe not once we add noise?)
+
+Higher-order models can approximate the simpler dynamics quite accurately, over a subset of the state space. The number of local minima corresponding to higher-order models is probably much larger than 1, which means we will tend to get stuck in a wrong local minimum. The richer our set of possible models, the more state space we need to explore to differentiate between them. Many dynamical systems have attractors; if you collect the data when the system is near an attractor, the data will be confined to a potentially small subset of the state space, which means you won't have enough information to distinguish between competing models. One solution is to initialize the system from many random initial conditions in order to force more exploration.
+
+Using random batches of training data appears to be faster than iterating through the entire training set, but makes knowing when to prune harder.
+
+-------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+
