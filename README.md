@@ -1,8 +1,12 @@
-## AC-SINDy: Scalable Sparse Identification of Nonlinear Dynamics via Arithmetic Circuits
+## AC-SINDy: Compositional Sparse Identification of Nonlinear Dynamics
 
-A compositional extension of the Sparse Identification of Nonlinear Dynamics (SINDy) framework that replaces explicit feature libraries with structured arithmetic circuits for learning sparse, interpretable dynamical systems.
+**TL;DR:** Learn sparse dynamical systems without enumerating candidate functions.
 
-The original SINDy algorithm (Brunton et al., 2016) identifies governing equations by selecting a sparse combination of candidate functions from a predefined library. In contrast, this project constructs candidate functions implicitly through compositions of linear transformations and multiplicative interactions, enabling a more scalable and structured representation.
+A compositional extension of the Sparse Identification of Nonlinear Dynamics (SINDy) framework that replaces explicit feature libraries with a structured, factorized representation.
+
+Standard SINDy identifies governing equations by selecting sparse combinations of candidate functions from a predefined library. However, this library grows combinatorially with system dimension and nonlinearity.
+
+AC-SINDy avoids explicit enumeration by constructing functions implicitly through compositions of simple primitives (e.g., linear transformations and multiplicative interactions), yielding a compact and scalable representation.
 
 ---
 
@@ -28,64 +32,73 @@ ac-sindy/
 
 ---
 
+
+---
+
 ## Method Overview
 
 - The model is a **compositional architecture** consisting of alternating linear and multiplicative layers.
-- These layers form a **sparse arithmetic circuit**, constructing nonlinear features via compositions of sums and products.
-- The network is trained to fit system dynamics from data.
-- Parameters are iteratively pruned based on their marginal impact on performance.
-- The result is a **sparse, structured representation** of the governing equations.
+- These layers define a structured computational graph that builds nonlinear features through composition.
+- The resulting representation can be viewed as a **factorized parameterization of polynomial interactions**.
+- The model is trained on trajectory data (Neural ODE formulation).
+- Sparsity is induced through **iterative pruning with gradient-based importance estimates**.
 
 ---
 
 ## Key Ideas
 
-### **Arithmetic circuit representation**
-- Replaces explicit SINDy libraries with a compositional computational graph.
-- Nonlinear features are constructed via products of learned linear functions.
-- Equivalent to learning a **factorized representation of polynomial interactions**, rather than enumerating all terms.
+### **Compositional function representation**
+- Replaces explicit SINDy libraries with an implicit, learned function class.
+- Nonlinear terms are constructed via compositions of simple primitives.
+- Enables representation of complex interactions without enumerating all candidate terms.
+
+### **Factorized hypothesis class**
+- The model represents functions as compositions of low-order operations.
+- Equivalent to a **factorized (low-rank) representation of polynomial features**.
+- Trades completeness of the function library for parameter efficiency and structure.
 
 ### **Structure learning via pruning**
-- Each parameter corresponds to an edge in the computational graph.
-- Iterative pruning removes edges with minimal impact on performance.
-- Produces a sparse and interpretable model structure.
+- Parameters correspond to edges in the computational graph.
+- Iterative pruning removes low-importance connections using gradient-based criteria.
+- Produces sparse and interpretable models.
 
-### **Multi-step training (Neural ODE formulation)**
-- Uses trajectory-level supervision instead of single-step regression.
-- Encourages consistency over time and improves robustness.
+### **Feature Normalization**
+- Each feature is normalized independently using running statistics.
+- Ensures coefficients reflect true importance rather than feature scale.
+- Provides a scale-invariant parameterization while preserving interpretability.
 
 ### **Scalability through factorization**
 - Standard SINDy requires \(O(n^p)\) candidate terms for polynomial order \(p\).
-- AC-SINDy replaces basis expansion with compositional factorization.
+- AC-SINDy replaces this with a compositional representation.
 - Under sparsity assumptions, parameter count scales as \(O(n^2 p)\).
 
 ---
 
 ## Experiments
 
-The notebook `ac_sindy.ipynb` contains experiments on:
+The notebook `ac_sindy.ipynb` includes experiments on:
 
-- 2D dynamical systems
+- 2D nonlinear dynamical systems
 - The Lorenz system (chaotic 3D dynamics)
 - Systems with nonlinear and compositional structure (e.g., sinusoidal forcing)
 
 Results demonstrate that the method can:
-- recover accurate governing equations
-- identify sparse and interpretable models
+- recover governing equations with correct functional structure
+- identify sparse and interpretable representations
 - maintain strong predictive performance under pruning
 
 ---
 
 ## Conceptual Insight
 
-Standard SINDy relies on **basis expansion**:
-- explicitly enumerates candidate functions
-- scales combinatorially with system complexity
+Standard SINDy relies on **explicit basis expansion**:
+- enumerates candidate functions
+- scales combinatorially with complexity
 
 AC-SINDy replaces this with **compositional factorization**:
-- constructs functions through structured compositions
+- constructs functions through structured composition
 - avoids explicit enumeration
-- trades completeness for scalability and structure
+- provides a compact, structured alternative for system identification
 
 ---
 
