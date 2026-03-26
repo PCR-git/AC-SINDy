@@ -208,3 +208,16 @@ def f_update_weights(model,eps):
 ################################################################################
 ################################################################################ 
 
+def f_prepare_rnn_data(y_data, history_len, future_len):
+    """
+    Converts trajectory into (Batch, History+Future, Dim)
+    """
+    n_points = y_data.shape[0]
+    windows = []
+    for i in range(n_points - history_len - future_len):
+        windows.append(y_data[i : i + history_len + future_len])
+    
+    # Shape: [Num_Windows, History + Future, Samples, Dim]
+    return torch.stack(windows)
+
+

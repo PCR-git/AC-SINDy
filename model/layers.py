@@ -6,19 +6,30 @@ import numpy as np
 ################################################################################
 ################################################################################
 
-class MultiplicativeLayer(nn.Module):
-    """
-    Computes the product of all features across the final dimension.
+# class MultiplicativeLayer(nn.Module):
+#     """
+#     Computes the product of all features across the final dimension.
     
-    This layer is typically used in SINDy-based architectures to generate 
-    higher-order polynomial terms from input features.
-    """
+#     This layer is typically used in SINDy-based architectures to generate 
+#     higher-order polynomial terms from input features.
+#     """
+#     def __init__(self):
+#         super(MultiplicativeLayer, self).__init__()
+
+#     def forward(self, inputs):
+#         return torch.prod(inputs, dim=2, keepdim=True)
+
+class MultiplicativeLayer(nn.Module):
     def __init__(self):
         super(MultiplicativeLayer, self).__init__()
 
     def forward(self, inputs):
-        return torch.prod(inputs, dim=2, keepdim=True)
-
+        # Determine which dimension to multiply based on input rank
+        # If 3D [Batch, Seq, Dim], use dim=2
+        # If 2D [Batch, Dim], use dim=1
+        target_dim = inputs.ndim - 1
+        return torch.prod(inputs, dim=target_dim, keepdim=True)
+    
 ################################################################################
 ################################################################################
 
@@ -101,21 +112,71 @@ class MaskedLinearLayer(torch.nn.Linear):
 ################################################################################
 ################################################################################            
 
-# Masked Linear Layer 2
+# # Masked Linear Layer 2
+# class MaskedLinearLayer2(torch.nn.Linear):
+#     """
+#     Alternative Masked Linear Layer supporting specialized activation constraints.
+    
+#     Provides options for 'sigmoid' or 'abs' constrained weights, often 
+#     used for maintaining positivity or stability in dynamical system discovery.
+#     """
+#     def __init__(self, size_in: int, size_out: int, use_bias=False, keep_layer_input=False, act=False):
+#         super().__init__(size_in, size_out, use_bias)
+#         self.register_buffer('mask', torch.ones((size_out, size_in), dtype=torch.float32))
+#         self.keep_layer_input = keep_layer_input
+#         self.act = act
+
+#         nn.init.normal_(self.weight, mean=1, std=1)
+
+#     def forward(self, input):
+#         x = input.float()
+#         if self.keep_layer_input:
+#             self.layer_input = x.detach()
+
+#         if self.act == 'sigmoid':
+#             w = torch.sigmoid(self.weight)
+#         elif self.act == 'abs':
+#             w = torch.abs(self.weight)
+#         else:
+#             w = self.weight
+            
+#         # Apply mask
+#         w = w * self.mask
+
+#         out = torch.matmul(x, w.t())
+
+#         if self.bias is not None:
+#             out += self.bias
+
+#         return out.unsqueeze(1) if out.dim() == 2 else out 
+    
+#     def compute_mask(self, idx):
+#         """
+#         Zeroes out the mask and the weight at the specified index.
+#         This effectively prunes the connection from the network.
+#         """
+#         # Set mask term to zero (1.0 -> 0.0)
+#         self.mask[idx] = 0.0 
+        
+#         with torch.no_grad(): # Ensure this change doesn't interfere with gradients
+#             # Set the weight itself to zero so it doesn't contribute to the sum
+#             self.weight[idx] = 0.0
+
 class MaskedLinearLayer2(torch.nn.Linear):
     """
-    Alternative Masked Linear Layer supporting specialized activation constraints.
-    
-    Provides options for 'sigmoid' or 'abs' constrained weights, often 
-    used for maintaining positivity or stability in dynamical system discovery.
+    Masked linear layer with optional weight constraints.
+    Supports 'sigmoid' or 'abs' activation on weights for use in
+    architectures requiring positive or bounded weight values,
+    such as rational dynamical system discovery (HLMSD_Net_2D).
     """
-    def __init__(self, size_in: int, size_out: int, use_bias=False, keep_layer_input=False, act=False):
+    def __init__(self, size_in: int, size_out: int, use_bias=False,
+                 keep_layer_input=False, act=False):
         super().__init__(size_in, size_out, use_bias)
         self.register_buffer('mask', torch.ones((size_out, size_in), dtype=torch.float32))
         self.keep_layer_input = keep_layer_input
         self.act = act
-
-        nn.init.normal_(self.weight, mean=1, std=1)
+        nn.init.kaiming_uniform_(self.weight, a=1, mode='fan_in',
+                                  nonlinearity='leaky_relu')
 
     def forward(self, input):
         x = input.float()
@@ -128,27 +189,16 @@ class MaskedLinearLayer2(torch.nn.Linear):
             w = torch.abs(self.weight)
         else:
             w = self.weight
-            
-        # Apply mask
+
         w = w * self.mask
-
         out = torch.matmul(x, w.t())
-
         if self.bias is not None:
             out += self.bias
+        return out
 
-        return out.unsqueeze(1) if out.dim() == 2 else out 
-    
     def compute_mask(self, idx):
-        """
-        Zeroes out the mask and the weight at the specified index.
-        This effectively prunes the connection from the network.
-        """
-        # Set mask term to zero (1.0 -> 0.0)
-        self.mask[idx] = 0.0 
-        
-        with torch.no_grad(): # Ensure this change doesn't interfere with gradients
-            # Set the weight itself to zero so it doesn't contribute to the sum
+        self.mask[idx] = 0.0
+        with torch.no_grad():
             self.weight[idx] = 0.0
             
 ################################################################################

@@ -73,33 +73,6 @@ def f_trigger_pruning(log_mean_loss,min_log_mean_loss,epochs_no_improve,n_epochs
 ################################################################################
 ################################################################################ 
 
-# def f_display_weights(model):
-#   """Print model weights"""
-
-#   eps = 1e-05
-
-#   linear_layers = f_get_linear_layers(model)
-#   print(" ")
-#   print("WEIGHTS:")
-#   print("Linear Layers:")
-#   i = 0
-#   for layer in linear_layers:
-#     print("Layer:",i)
-#     # print("Weights:",layer.weight)
-#     print("Weights:", layer.weight/model.std_dev)
-
-#     i+=1
-
-#   hadamard_layers = f_get_Hadamard_layers(model)
-#   print(" ")
-#   print("Hadamard Layers:")
-#   i = 0
-#   for layer in hadamard_layers:
-#     print("Layer:",i)
-#     print("Weights:",layer.weight)
-
-#     i+=1
-
 def f_display_weights(model):
     """
     Print model weights, normalized by the model's standard deviation 
